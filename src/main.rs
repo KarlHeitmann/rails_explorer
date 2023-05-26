@@ -1,3 +1,12 @@
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+
+use ratatui::{
+    backend::{CrosstermBackend, Backend},
+
+    // backend::{ CrosstermBackend, Backend },
+    Terminal
+};
+
 // use log::{trace, LevelFilter, SetLoggerError};
 // use log::{trace, LevelFilter};
 use log4rs::{
@@ -9,6 +18,10 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     // filter::threshold::ThresholdFilter,
 };
+
+use crate::ui::App;
+
+mod ui;
 
 fn setup_logger() {
     let log_level = std::env::var("LOG_LEVEL").unwrap_or(String::new());
@@ -52,7 +65,17 @@ fn setup_logger() {
     let _handle = log4rs::init_config(config).unwrap();
 }
 
-fn main() {
+pub fn explorer_wrapper<B: Backend>(terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>> {
+    terminal.clear()?;
+    let mut app = App::new();
+    app.run(terminal)?;
+    // app::app(terminal, &mut node_list_state, &mut git_explorer, repo);
+    Ok(())
+}
+
+
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup_logger();
 
     log::error!("Program starts...");
@@ -61,6 +84,23 @@ fn main() {
     log::debug!("Program starts...");
     log::trace!("Program starts...");
 
-    println!("Hello, world!");
+    enable_raw_mode().expect("can run in raw mode");
 
+    let stdout = std::io::stdout();
+    // execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    terminal.clear()?;
+
+    explorer_wrapper(&mut terminal);
+
+
+    disable_raw_mode()?;
+    terminal.show_cursor()?;
+
+    // test_info(&repo);
+
+
+    Ok(())
 }
