@@ -32,6 +32,7 @@ impl RouteNode {
     // pub fn new(domain: String, s: String) -> Result<Self, &'static str> {
     pub fn new(domain: String, s: String) -> Result<Self, String> {
         let s = s.trim();
+        log::info!("{}", s);
         let original_line: String = s.to_string();
         /*
         let s.split_once(" ")
@@ -107,6 +108,22 @@ pub struct Routes {
 }
 
 impl Routes {
+    fn parse_file(domain: &str, s: String) -> Vec<RouteNode> {
+        let mut route_nodes: Vec<RouteNode> = vec![];
+        let ss = s.split("\n");
+        for s in ss {
+            match RouteNode::new(domain.to_string(), s.to_string()) {
+                Ok(route_node) => {
+                    // println!("{}", route_node);
+                    route_nodes.push(route_node)
+                },
+                // Err(_e) => {}
+                Err(e) => {println!("ERR: {}", e)}
+            }
+        };
+        route_nodes
+    }
+
     pub fn new(domain: &str, routes_file_name: &str) -> Option<Self> {
         // Create a path to the desired file
         let path = Path::new(routes_file_name);
@@ -121,24 +138,13 @@ impl Routes {
             },
             Ok(mut file) => { 
                 let mut s = String::new();
-                let res = match file.read_to_string(&mut s) {
+                match file.read_to_string(&mut s) {
                     Err(e) => { 
                         // println!("An error ||{}|| occurred", e);
                         None
                     },
                     Ok(_) => {
-                        let mut route_nodes: Vec<RouteNode> = vec![];
-                        let ss = s.split("\n");
-                        for s in ss {
-                            match RouteNode::new(domain.to_string(), s.to_string()) {
-                                Ok(route_node) => {
-                                    // println!("{}", route_node);
-                                    route_nodes.push(route_node)
-                                },
-                                // Err(_e) => {}
-                                Err(e) => {println!("ERR: {}", e)}
-                            }
-                        }
+                        let route_nodes = Self::parse_file(domain, s);
                         let length = route_nodes.len();
                         Some(Self {
                             domain: domain.to_string(),
@@ -146,19 +152,18 @@ impl Routes {
                             length,
                         })
                     }
-                };
-
-                res
+                }
             }
         };
-
         routes
     }
+
     pub fn get_original_lines_span(&self) -> Vec<Spans> {
         self.route_nodes.iter().map( |route_node| {
             Spans::from(route_node.original_line.clone())
         }).collect::<Vec<Spans>>()
     }
+
     pub fn get_node_route(&self, i: usize) -> String {
         // self.route_nodes.get(0).unwrap().into()
         // self.route_nodes.get(0).unwrap().into::<String>()
@@ -166,6 +171,7 @@ impl Routes {
 
 
     }
+
     pub fn find(&self, target: String) -> Option<String> {
         let mut result = None;
         for route_node in &self.route_nodes {
