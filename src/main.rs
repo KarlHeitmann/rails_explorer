@@ -10,9 +10,16 @@ use log4rs::{
     // filter::threshold::ThresholdFilter,
 };
 
-fn main() {
-    let level = log::LevelFilter::Info;
-    // let level = log::LevelFilter::Trace;
+fn setup_logger() {
+    let log_level = std::env::var("LOG_LEVEL").unwrap_or(String::new());
+    let level = match log_level.as_str() {
+        "error" => log::LevelFilter::Error,
+        "warn" => log::LevelFilter::Warn,
+        "info" => log::LevelFilter::Info,
+        "debug" => log::LevelFilter::Debug,
+        "trace" => log::LevelFilter::Trace,
+        _ => log::LevelFilter::Off,
+    };
     let file_path = "./log";
 
     // Build a stderr logger.
@@ -43,6 +50,15 @@ fn main() {
     // once you are done.
     // let _handle = log4rs::init_config(config)?;
     let _handle = log4rs::init_config(config).unwrap();
+}
+
+fn main() {
+    setup_logger();
+
+    log::error!("Program starts...");
+    log::warn!("Program starts...");
+    log::info!("Program starts...");
+    log::debug!("Program starts...");
     log::trace!("Program starts...");
 
     println!("Hello, world!");
