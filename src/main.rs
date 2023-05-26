@@ -22,6 +22,7 @@ use log4rs::{
 use crate::ui::App;
 
 mod ui;
+mod routes;
 
 fn setup_logger() {
     let log_level = std::env::var("LOG_LEVEL").unwrap_or(String::new());
@@ -31,7 +32,8 @@ fn setup_logger() {
         "info" => log::LevelFilter::Info,
         "debug" => log::LevelFilter::Debug,
         "trace" => log::LevelFilter::Trace,
-        _ => log::LevelFilter::Off,
+        "off" => log::LevelFilter::Off,
+        _ => log::LevelFilter::Error,
     };
     let file_path = "./log";
 
@@ -78,11 +80,14 @@ pub fn explorer_wrapper<B: Backend>(terminal: &mut Terminal<B>) -> Result<(), Bo
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup_logger();
 
+    /*
+    // Different kinds of log messages, in hierarchy order.
     log::error!("Program starts...");
     log::warn!("Program starts...");
     log::info!("Program starts...");
     log::debug!("Program starts...");
     log::trace!("Program starts...");
+    */
 
     enable_raw_mode().expect("can run in raw mode");
 
