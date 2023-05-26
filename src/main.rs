@@ -22,6 +22,7 @@ use log4rs::{
 use crate::ui::App;
 
 mod ui;
+mod routes;
 
 fn setup_logger() {
     let log_level = std::env::var("LOG_LEVEL").unwrap_or(String::new());

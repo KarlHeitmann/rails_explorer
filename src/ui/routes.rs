@@ -1,5 +1,3 @@
-#![allow(unused)]  // FIXME
-
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Rect, Layout},
     text::{Span, Spans},
@@ -12,19 +10,26 @@ use ratatui::{
 };
 
 use crate::ui::Component;
+use crate::routes::Routes;
 // use crossterm::event::Event;
 use crossterm::event::KeyCode;
 
 pub struct RoutesComponent {
     paragraph_title: String,
+    routes: Routes,
+    index_route: usize,
 }
 
 impl RoutesComponent {
     // pub const fn new() -> Self {
-    pub fn new() -> Self {
+    pub fn new(routes_path: &str) -> Self {
+        let routes = Routes::new("http://localhost:3000", "routes.txt").unwrap();
+
         let paragraph_title = String::from("Routes title");
         Self {
             paragraph_title,
+            routes,
+            index_route: 0,
         }
     }
 
@@ -38,41 +43,24 @@ impl RoutesComponent {
         let vertical_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
-                [Constraint::Length(5), Constraint::Min(5)].as_ref()
+                [Constraint::Length(8), Constraint::Min(5)].as_ref()
             )
             .split(rect);
 
-        // let text = Spans::from(git_explorer.branches_strings());
-        let mut text = vec![Spans::from("CHANGE ME")];
-        
-        let head = String::from("HEAD CHANGE ME");
+        let index_route = self.index_route;
+        let route_node = self.routes.get_node_route(index_route);
 
-        text.push(
-            Spans::from(vec![
-                Span::styled(format!("HEAD: CHANGE MY HEAD"), Style::default().fg(Color::White))
-            ])
-        );
-        text.push(
-            Spans::from(vec![
-                Span::styled(format!("oid: CHANGE MY OID"), Style::default().fg(Color::White))
-            ])
-        );
-
-        let p1 = Paragraph::new(text)
-            .block(Block::default().title(format!("Commit COMPLETE")).borders(Borders::ALL))
+        // let p2 = Paragraph::new(String::from(text_2))
+        let p1 = Paragraph::new(route_node) // TARGET
+            .block(Block::default().title(format!("Details route {}/{}", index_route, self.routes.length)).borders(Borders::ALL))
             .style(Style::default().fg(Color::White).bg(Color::Black))
             .alignment(Alignment::Left)
             .wrap(Wrap { trim: true });
 
-        // .shorthand().unwrap();
-        // let text_2 = repo.head().unwrap().peel_to_commit().unwrap();
+        let mut text = self.routes.get_original_lines_span();
 
-        let parsed_diff = String::from("PARSED DIFF CHANGE ME");
-
-
-        // let p2 = Paragraph::new(String::from(text_2))
-        let p2 = Paragraph::new(parsed_diff)
-            .block(Block::default().title(format!("Commit COMPLETE")).borders(Borders::ALL))
+        let p2 = Paragraph::new(text)
+            .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
             .style(Style::default().fg(Color::White).bg(Color::Black))
             .alignment(Alignment::Left)
             .wrap(Wrap { trim: true });
@@ -89,6 +77,8 @@ impl Component for RoutesComponent {
     }
 	fn event(&mut self, key_code: KeyCode) -> Result<String, String> {
         match key_code {
+            KeyCode::Up => { self.index_route = self.index_route.saturating_sub(1) }
+            KeyCode::Down => { self.index_route = self.index_route.saturating_add(1) }
             KeyCode::Tab => {
                 // TODO: Reset selected to zero to prevent bug when attempting to look at a
                 // commit that there is not anymore

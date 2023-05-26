@@ -1,5 +1,3 @@
-#![allow(unused)]  // FIXME
-
 use crossterm::event::{self, Event, KeyCode};
 // use crate::routes::RoutesComponent;
 
@@ -116,7 +114,7 @@ impl App {
     pub fn new() -> Self {
         let mut node_list_state = ListState::default();
         node_list_state.select(Some(0));
-        let routes_component = RoutesComponent::new();
+        let routes_component = RoutesComponent::new("routes.txt");
         // let graph_component = GraphComponent::new();
         Self { 
             node_list_state,
