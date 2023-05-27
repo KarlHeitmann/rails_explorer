@@ -79,18 +79,40 @@ impl Routes {
         routes
     }
 
-    pub fn get_original_lines_span(&self) -> Vec<Spans> {
-        self.route_nodes.iter().map( |route_node| {
-            Spans::from(route_node.trimmed_line.clone())
-        }).collect::<Vec<Spans>>()
+    /*
+    fn filter_route_nodes(&self, filter_string: String) -> &Vec<RouteNode> {
+        self.route_nodes.into_iter()
+            .filter(|route_node| route_node.uri_pattern.contains(&filter_string)).collect::<Vec<RouteNode>>()
+    }
+    */
+
+    pub fn get_original_lines_span(&self, filter_string: &String) -> Vec<Spans> {
+        self.route_nodes.iter()
+            .filter_map(|route_node| match route_node.uri_pattern.contains(filter_string) {
+                true => Some(Spans::from(format!("{:100}{}", route_node.uri_pattern, route_node.controller_action))),
+                false => None
+            }).collect::<Vec<Spans>>()
     }
 
-    pub fn get_node_route(&self, i: usize) -> String {
+    pub fn get_node_route(&self, i: usize, filter_string: &String) -> String {
         // self.route_nodes.get(0).unwrap().into()
         // self.route_nodes.get(0).unwrap().into::<String>()
-        format!("{}", self.route_nodes.get(i).unwrap())
 
+        /*
+            // .filter(|route_node| route_node.uri_pattern.contains(filter_string)).collect::<Vec<Spans>>()
+        let tmp = self.route_nodes.iter()
+            .filter(|route_node| route_node.uri_pattern.contains(filter_string));
+        let t = tmp;
+        */
 
+        match self.route_nodes.iter()
+            .filter(|route_node| route_node.uri_pattern.contains(filter_string))
+            // .nth(i).unwrap("");
+            .nth(i) {
+                Some(route_node) => format!("{}", route_node),
+                None => String::new()
+            }
+        
     }
 
     pub fn find(&self, target: String) -> Option<String> {

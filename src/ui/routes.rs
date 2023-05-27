@@ -18,6 +18,8 @@ pub struct RoutesComponent {
     paragraph_title: String,
     routes: Routes,
     index_route: usize,
+    filter_string: String,
+
 }
 
 impl RoutesComponent {
@@ -30,6 +32,7 @@ impl RoutesComponent {
             paragraph_title,
             routes,
             index_route: 0,
+            filter_string: String::new(),
         }
     }
 
@@ -48,16 +51,16 @@ impl RoutesComponent {
             .split(rect);
 
         let index_route = self.index_route;
-        let route_node = self.routes.get_node_route(index_route);
+        let route_node = self.routes.get_node_route(index_route, &self.filter_string);
+        let text = self.routes.get_original_lines_span(&self.filter_string);
 
         // let p2 = Paragraph::new(String::from(text_2))
         let p1 = Paragraph::new(route_node) // TARGET
-            .block(Block::default().title(format!("Details route {}/{}", index_route, self.routes.length)).borders(Borders::ALL))
+            .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
             .style(Style::default().fg(Color::White).bg(Color::Black))
             .alignment(Alignment::Left)
             .wrap(Wrap { trim: true });
 
-        let mut text = self.routes.get_original_lines_span();
 
         let p2 = Paragraph::new(text)
             .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
@@ -83,7 +86,11 @@ impl Component for RoutesComponent {
                 // TODO: Reset selected to zero to prevent bug when attempting to look at a
                 // commit that there is not anymore
             }
-            KeyCode::BackTab => {
+            KeyCode::Char(c) => {
+                self.filter_string.push(c);
+            },
+            KeyCode::Backspace => {
+                self.filter_string.pop();
             }
             _ => {}
         }

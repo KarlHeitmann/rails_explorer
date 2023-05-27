@@ -45,8 +45,8 @@ pub struct RouteNode {
     domain: String,
     prefix: Option<String>,
     verb: String,
-    uri_pattern: String,
-    controller_action: String,
+    pub uri_pattern: String,
+    pub controller_action: String,
     pub trimmed_line: String,
 }
 

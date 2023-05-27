@@ -1,4 +1,7 @@
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use std::io;
+
 
 use ratatui::{
     backend::{CrosstermBackend, Backend},
@@ -23,6 +26,24 @@ use crate::ui::App;
 
 mod ui;
 mod routes;
+
+/// Resets the terminal.
+fn reset_terminal() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    disable_raw_mode()?;
+    crossterm::execute!(io::stdout(), LeaveAlternateScreen)?;
+
+    Ok(())
+}
+
+fn chain_hook() {
+    let original_hook = std::panic::take_hook();
+
+    std::panic::set_hook(Box::new(move |panic| {
+        reset_terminal().unwrap();
+        original_hook(panic);
+    }));
+
+}
 
 fn setup_logger() {
     let log_level = std::env::var("LOG_LEVEL").unwrap_or(String::new());
@@ -89,6 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log::trace!("Program starts...");
     */
 
+    crossterm::execute!(io::stdout(), EnterAlternateScreen)?;
     enable_raw_mode().expect("can run in raw mode");
 
     let stdout = std::io::stdout();
@@ -97,10 +119,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     terminal.clear()?;
+    chain_hook();
 
     explorer_wrapper(&mut terminal);
 
 
+    reset_terminal();
     disable_raw_mode()?;
     terminal.show_cursor()?;
 
