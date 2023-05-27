@@ -45,38 +45,22 @@ impl Routes {
         (route_nodes, errors)
     }
 
-    pub fn new(domain: &str, routes_file_name: &str) -> Option<Self> {
-        // Create a path to the desired file
+
+    pub fn new(domain: &str, routes_file_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let path = Path::new(routes_file_name);
 
-        // Open the path in read-only mode, returns `io::Result<File>`
-        let routes = match File::open(&path) {
-            Err(e) => 
-            {
-                log::error!("Uh oh, something bad happened when trying to open the file \"{}\"\nDetail:\n{}", path.display(), e);
-                None
-            },
-            Ok(mut file) => { 
-                let mut s = String::new();
-                match file.read_to_string(&mut s) {
-                    Err(e) => { 
-                        log::error!("An error occured while reading the file:\n{}", e); 
-                        None
-                    },
-                    Ok(_) => {
-                        let (route_nodes, errors) = Self::parse_file(domain, s);
-                        let length = route_nodes.len();
-                        Some(Self {
-                            domain: domain.to_string(),
-                            route_nodes,
-                            errors,
-                            length,
-                        })
-                    }
-                }
-            }
-        };
-        routes
+        let mut file = File::open(&path)?;
+        let mut s = String::new();
+
+        let _num_bytes_read = file.read_to_string(&mut s)?;
+        let (route_nodes, errors) = Self::parse_file(domain, s);
+        let length = route_nodes.len();
+        Ok(Self {
+            domain: domain.to_string(),
+            route_nodes,
+            errors,
+            length,
+        })
     }
 
     /*

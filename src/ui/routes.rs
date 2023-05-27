@@ -16,7 +16,7 @@ use crossterm::event::KeyCode;
 
 pub struct RoutesComponent {
     paragraph_title: String,
-    routes: Routes,
+    routes: Result<Routes, Box<dyn std::error::Error>>,
     index_route: usize,
     filter_string: String,
 
@@ -24,8 +24,10 @@ pub struct RoutesComponent {
 
 impl RoutesComponent {
     // pub const fn new() -> Self {
+    // pub fn new(routes_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    //     let routes = Routes::new("http://localhost:3000", "routes.txt")?;
     pub fn new(routes_path: &str) -> Self {
-        let routes = Routes::new("http://localhost:3000", "routes.txt").unwrap();
+        let routes = Routes::new("http://localhost:3000", "routes.txt");
 
         let paragraph_title = String::from("Routes title");
         Self {
@@ -51,25 +53,47 @@ impl RoutesComponent {
             .split(rect);
 
         let index_route = self.index_route;
-        let route_node = self.routes.get_node_route(index_route, &self.filter_string);
-        let text = self.routes.get_original_lines_span(&self.filter_string);
+        match &self.routes {
+            Ok(routes) => {
+                let route_node = routes.get_node_route(index_route, &self.filter_string);
+                let text = routes.get_original_lines_span(&self.filter_string);
 
-        // let p2 = Paragraph::new(String::from(text_2))
-        let p1 = Paragraph::new(route_node) // TARGET
-            .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
-            .style(Style::default().fg(Color::White).bg(Color::Black))
-            .alignment(Alignment::Left)
-            .wrap(Wrap { trim: true });
+                // let p2 = Paragraph::new(String::from(text_2))
+                let p1 = Paragraph::new(route_node) // TARGET
+                    .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
+                    .style(Style::default().fg(Color::White).bg(Color::Black))
+                    .alignment(Alignment::Left)
+                    .wrap(Wrap { trim: true });
 
 
-        let p2 = Paragraph::new(text)
-            .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
-            .style(Style::default().fg(Color::White).bg(Color::Black))
-            .alignment(Alignment::Left)
-            .wrap(Wrap { trim: true });
+                let p2 = Paragraph::new(text)
+                    .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
+                    .style(Style::default().fg(Color::White).bg(Color::Black))
+                    .alignment(Alignment::Left)
+                    .wrap(Wrap { trim: true });
 
-        f.render_widget(p1, vertical_chunks[0]);
-        f.render_widget(p2, vertical_chunks[1]);
+                f.render_widget(p1, vertical_chunks[0]);
+                f.render_widget(p2, vertical_chunks[1]);
+            },
+            Err(e) => {
+                // let p2 = Paragraph::new(String::from(text_2))
+                let p1 = Paragraph::new("Unable to load Routes module. It is probably missing the routes.txt file.") // TARGET
+                    .block(Block::default().title("ROUTES ERROR").borders(Borders::ALL))
+                    .style(Style::default().fg(Color::White).bg(Color::Black))
+                    .alignment(Alignment::Left)
+                    .wrap(Wrap { trim: true });
+
+
+                let p2 = Paragraph::new(format!("Details: {}", e))
+                    .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
+                    .style(Style::default().fg(Color::White).bg(Color::Black))
+                    .alignment(Alignment::Left)
+                    .wrap(Wrap { trim: true });
+
+                f.render_widget(p1, vertical_chunks[0]);
+                f.render_widget(p2, vertical_chunks[1]);
+            }
+        };
 
     }
 }

@@ -131,7 +131,7 @@ impl App {
 
         let mut tab_index = 0;
 
-        let menu_titles = vec!["Home", "Quit"];
+        let menu_titles = vec!["Routes", "Quit"];
         let active_menu_item = MenuItem::Home;
         loop {
             terminal.draw(|f| {
