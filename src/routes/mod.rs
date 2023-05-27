@@ -3,22 +3,22 @@ use std::io::prelude::*;
 use std::path::Path;
 use ratatui::text::{Span, Spans};
 
-use crate::routes::route_node::RouteNode;
+use crate::routes::route_node::{RouteNode, RouteNodeNewErrorType, RouteNodeNewError};
 
 pub struct Routes {
     // path: String,
     domain: String,
     route_nodes: Vec<RouteNode>,
-    errors: Vec<String>,
+    errors: Vec<RouteNodeNewError>,
     pub length: usize,
 }
 
 mod route_node;
 
 impl Routes {
-    fn parse_file(domain: &str, s: String) -> (Vec<RouteNode>, Vec<String>) {
+    fn parse_file(domain: &str, s: String) -> (Vec<RouteNode>, Vec<RouteNodeNewError>) {
         let mut route_nodes: Vec<RouteNode> = vec![];
-        let mut errors: Vec<String> = vec![];
+        let mut errors: Vec<RouteNodeNewError> = vec![];
         let ss = s.split("\n");
         for s in ss {
             if s.is_empty() { continue; }
@@ -29,8 +29,16 @@ impl Routes {
                 },
                 // Err(_e) => {}
                 Err(e) => {
-                    errors.push(s.to_string());
-                    log::error!("Error while parsing line:\n{:?}\nDetails:\n{}", s, e);
+                    match e.code {
+                        RouteNodeNewErrorType::InvalidVectorSize => {
+                            log::error!("{}", e);
+                            log::debug!("{:?}", e);
+                            errors.push(e);
+                        },
+                        RouteNodeNewErrorType::EmptyString | RouteNodeNewErrorType::BlackList | RouteNodeNewErrorType::Header => {
+                        },
+
+                    }
                 }
             }
         };
@@ -73,7 +81,7 @@ impl Routes {
 
     pub fn get_original_lines_span(&self) -> Vec<Spans> {
         self.route_nodes.iter().map( |route_node| {
-            Spans::from(route_node.original_line.clone())
+            Spans::from(route_node.trimmed_line.clone())
         }).collect::<Vec<Spans>>()
     }
 
