@@ -4,7 +4,7 @@ use ratatui::{
     style::{Color, Style},
     terminal::Frame,
     widgets::{
-        Block, Borders, Paragraph, Wrap
+        Block, Borders, Paragraph, Wrap, Clear
     },
     backend::Backend,
 };
@@ -19,7 +19,34 @@ pub struct RoutesComponent {
     routes: Result<Routes, Box<dyn std::error::Error>>,
     index_route: usize,
     filter_string: String,
+    show_popup: bool,
+}
 
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
 
 impl RoutesComponent {
@@ -35,6 +62,7 @@ impl RoutesComponent {
             routes,
             index_route: 0,
             filter_string: String::new(),
+            show_popup: false,
         }
     }
 
@@ -55,25 +83,65 @@ impl RoutesComponent {
         let index_route = self.index_route;
         match &self.routes {
             Ok(routes) => {
-                let route_node = routes.get_node_route(index_route, &self.filter_string);
-                let text = routes.get_original_lines_span(&self.filter_string);
 
-                // let p2 = Paragraph::new(String::from(text_2))
-                let p1 = Paragraph::new(route_node) // TARGET
-                    .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
-                    .style(Style::default().fg(Color::White).bg(Color::Black))
-                    .alignment(Alignment::Left)
-                    .wrap(Wrap { trim: true });
+                let route_node = routes.get_route_node(index_route, &self.filter_string);
+                match route_node {
+                    Some(route_node) => {
+                        let text = routes.get_original_lines_span(&self.filter_string);
+
+                        // let p2 = Paragraph::new(String::from(text_2))
+                        let p1 = Paragraph::new(Into::<String>::into(route_node)) // TARGET
+                        // let p1 = Paragraph::new(route_node.into::<String>()) // TARGET
+                            .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
+                            .style(Style::default().fg(Color::White).bg(Color::Black))
+                            .alignment(Alignment::Left)
+                            .wrap(Wrap { trim: true });
 
 
-                let p2 = Paragraph::new(text)
-                    .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
-                    .style(Style::default().fg(Color::White).bg(Color::Black))
-                    .alignment(Alignment::Left)
-                    .wrap(Wrap { trim: true });
+                        let p2 = Paragraph::new(text)
+                            .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
+                            .style(Style::default().fg(Color::White).bg(Color::Black))
+                            .alignment(Alignment::Left)
+                            .wrap(Wrap { trim: true });
 
-                f.render_widget(p1, vertical_chunks[0]);
-                f.render_widget(p2, vertical_chunks[1]);
+                        f.render_widget(p1, vertical_chunks[0]);
+                        f.render_widget(p2, vertical_chunks[1]);
+
+                        if self.show_popup {
+                            // let popup = Paragraph::new(route_node.into::<Spans>()) // TARGET
+                            // let popup = Paragraph::new(Into::<Spans>::into(route_node)) // TARGET
+                            let popup = Paragraph::new(Into::<Vec<Spans>>::into(route_node)) // TARGET
+                                .block(Block::default().title("Route Details").borders(Borders::ALL))
+                                .style(Style::default().fg(Color::White).bg(Color::Black))
+                                .alignment(Alignment::Left)
+                                .wrap(Wrap { trim: true });
+                            let size = f.size();
+
+                            let block = Block::default().title("Popup").borders(Borders::ALL);
+                            let area = centered_rect(60, 20, size);
+                            f.render_widget(Clear, area); //this clears out the background
+                            // f.render_widget(block, area);
+                            f.render_widget(popup, area);
+                        }
+                    }
+                    None => {
+                        let text = routes.get_original_lines_span(&self.filter_string);
+                        let p1 = Paragraph::new("FAILED TO LOAD SELECTED NODE") // TARGET
+                        // let p1 = Paragraph::new(route_node.into::<String>()) // TARGET
+                            .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
+                            .style(Style::default().fg(Color::White).bg(Color::Black))
+                            .alignment(Alignment::Left)
+                            .wrap(Wrap { trim: true });
+                        let p2 = Paragraph::new(text)
+                            .block(Block::default().title(format!("List routes")).borders(Borders::ALL))
+                            .style(Style::default().fg(Color::White).bg(Color::Black))
+                            .alignment(Alignment::Left)
+                            .wrap(Wrap { trim: true });
+                        f.render_widget(p1, vertical_chunks[0]);
+                        f.render_widget(p2, vertical_chunks[1]);
+
+                    }
+                }
             },
             Err(e) => {
                 // let p2 = Paragraph::new(String::from(text_2))
@@ -106,6 +174,8 @@ impl Component for RoutesComponent {
         match key_code {
             KeyCode::Up => { self.index_route = self.index_route.saturating_sub(1) }
             KeyCode::Down => { self.index_route = self.index_route.saturating_add(1) }
+            KeyCode::Right => { self.show_popup = true }
+            KeyCode::Left => { self.show_popup = false }
             KeyCode::Tab => {
                 // TODO: Reset selected to zero to prevent bug when attempting to look at a
                 // commit that there is not anymore

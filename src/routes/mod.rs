@@ -78,24 +78,14 @@ impl Routes {
             }).collect::<Vec<Spans>>()
     }
 
-    pub fn get_node_route(&self, i: usize, filter_string: &String) -> String {
-        // self.route_nodes.get(0).unwrap().into()
-        // self.route_nodes.get(0).unwrap().into::<String>()
-
-        /*
-            // .filter(|route_node| route_node.uri_pattern.contains(filter_string)).collect::<Vec<Spans>>()
-        let tmp = self.route_nodes.iter()
-            .filter(|route_node| route_node.uri_pattern.contains(filter_string));
-        let t = tmp;
-        */
-
-        match self.route_nodes.iter()
+    pub fn get_route_node(&self, i: usize, filter_string: &String) -> Option<&RouteNode> {
+        self.route_nodes.iter()
             .filter(|route_node| route_node.uri_pattern.contains(filter_string))
             // .nth(i).unwrap("");
-            .nth(i) {
+            .nth(i) /*{
                 Some(route_node) => format!("{}", route_node),
                 None => String::new()
-            }
+            }*/
         
     }
 
