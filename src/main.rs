@@ -45,7 +45,7 @@ fn chain_hook() {
 
 }
 
-fn setup_logger() {
+fn setup_logger(file_path: &str) {
     let log_level = std::env::var("LOG_LEVEL").unwrap_or(String::new());
     let level = match log_level.as_str() {
         "error" => log::LevelFilter::Error,
@@ -56,7 +56,6 @@ fn setup_logger() {
         "off" => log::LevelFilter::Off,
         _ => log::LevelFilter::Error,
     };
-    let file_path = "./log";
 
     // Build a stderr logger.
     let _stderr = ConsoleAppender::builder().target(Target::Stderr).build();
@@ -99,7 +98,7 @@ pub fn explorer_wrapper<B: Backend>(terminal: &mut Terminal<B>) -> Result<(), Bo
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    setup_logger();
+    setup_logger(&std::env::var("LOG_FILE").unwrap_or(String::from("./log.txt"))); // TODO: if env var is not present, don't setup logger
 
     /*
     // Different kinds of log messages, in hierarchy order.
