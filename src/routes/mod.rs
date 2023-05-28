@@ -68,6 +68,7 @@ impl Routes {
         let mut file = File::open(&path)?;
         let mut s = String::new();
 
+
         let _num_bytes_read = file.read_to_string(&mut s)?;
         let (route_nodes, errors) = Self::parse_file(domain, s);
         let length = route_nodes.len();

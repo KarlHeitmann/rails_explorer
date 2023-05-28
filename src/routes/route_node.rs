@@ -93,7 +93,7 @@ impl RouteNode {
     pub fn new(domain: String, s: String) -> Result<Self, RouteNodeNewError> {
         // let s = s.trim();
         let ss = s.trim().to_string();
-        log::info!("{}", s);
+        // log::info!("{}", s);
 
         let ss = ss.split(" ");
         let ss = ss.filter(|s| !s.is_empty() );

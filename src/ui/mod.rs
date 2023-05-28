@@ -49,6 +49,34 @@ impl From<MenuItem> for usize {
     }
 }
 
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
+}
+
+
 fn get_layout_chunks(size: Rect) -> Vec<Rect> {
 // fn get_layout_chunks(size: Rect) -> Rc<Rect> {
     Layout::default()
@@ -125,7 +153,8 @@ impl App {
         let mut node_list_state = ListState::default();
         node_list_state.select(Some(0));
         let routes_component = RoutesComponent::new("routes.txt");
-        let associations_component = AssociationsComponent::new();
+        let application_path = std::env::var("APPLICATION_ROOT_PATH").unwrap_or(String::from("./"));
+        let associations_component = AssociationsComponent::new(application_path);
         // let graph_component = GraphComponent::new();
         Self { 
             node_list_state,
@@ -179,6 +208,7 @@ impl App {
                             key_code => {
                                 match tab_index {
                                     0 => {self.routes_component.event(key_code);}
+                                    1 => {self.associations_component.event(key_code);}
                                     _ => {}
                                 }
                             }
@@ -196,6 +226,7 @@ impl App {
                                 match tab_index {
                                     // 0 => {self.graph_component.event(key_code);},
                                     0 => {self.routes_component.command_mode_event(key_code);},
+                                    1 => {self.associations_component.command_mode_event(key_code);},
                                     _ => {}
                                 }
                             }
