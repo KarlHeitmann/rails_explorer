@@ -104,8 +104,15 @@ impl RoutesComponent {
                 let route_node = rs.get(index_route);
                 match route_node {
                     Some(route_node) => {
+                        let title_spans = Spans::from(
+                            vec![
+                                Span::from(format!("Details route {}/{} | ", index_route, self.filtered_size)),
+                                Span::styled(format!("Filter: '{}'", self.filter_string), Style::default().fg(Color::Green)),
+                            ]
+                        );
+
                         let p1 = Paragraph::new(Into::<String>::into(*route_node)) // TARGET
-                            .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, self.filtered_size, self.filter_string)).borders(Borders::ALL))
+                            .block(Block::default().title(title_spans).borders(Borders::ALL))
                             .style(Style::default().fg(Color::White).bg(Color::Black))
                             .alignment(Alignment::Left)
                             .wrap(Wrap { trim: true });
@@ -145,9 +152,14 @@ impl RoutesComponent {
                     }
                     None => {
                         let text = routes.get_original_lines_span(&self.filter_string);
+                        let title_spans = Spans::from(
+                            vec![
+                                Span::from(format!("Details route {}/{} | ", index_route, self.filtered_size)),
+                                Span::styled(format!("Filter: '{}'", self.filter_string), Style::default().fg(Color::Red)),
+                            ]
+                        );
                         let p1 = Paragraph::new("FAILED TO LOAD SELECTED NODE") // TARGET
-                        // let p1 = Paragraph::new(route_node.into::<String>()) // TARGET
-                            .block(Block::default().title(format!("Details route {}/{} | Filter: '{}'", index_route, text.len(), self.filter_string)).borders(Borders::ALL))
+                            .block(Block::default().title(title_spans).borders(Borders::ALL))
                             .style(Style::default().fg(Color::White).bg(Color::Black))
                             .alignment(Alignment::Left)
                             .wrap(Wrap { trim: true });
