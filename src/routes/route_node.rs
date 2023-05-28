@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
-// use std::fmt;
+use ratatui::text::Spans;
 
 #[derive(Debug)]
 pub enum RouteNodeNewErrorType {
@@ -48,6 +48,30 @@ pub struct RouteNode {
     pub uri_pattern: String,
     pub controller_action: String,
     pub trimmed_line: String,
+}
+
+impl From<&RouteNode> for String {
+    fn from(route_node: &RouteNode) -> Self {
+        format!("{}", route_node)
+    }
+}
+
+impl<'a> From<&RouteNode> for Vec<Spans<'a>> {
+    fn from(route_node: &RouteNode) -> Vec<Spans<'a>> {
+        match route_node.controller_action.split_once('#') {
+            Some((controller, action)) => {
+                vec![
+                    Spans::from(format!("view_file_path: app/views/{}/{}.html.erb", controller, action)),
+                    Spans::from(format!("controller_file_path: app/controllers/{}_controller.rb", controller)),
+                ]
+            }
+            None => {
+                vec![
+                    Spans::from(format!("ERROR: No controller#action found: Debug this: app{}", route_node.controller_action)),
+                ]
+            }
+        }
+    }
 }
 
 impl Display for RouteNode {
@@ -127,6 +151,9 @@ impl RouteNode {
     }
     pub fn trimmed_line(&self) -> String {
         self.trimmed_line.clone()
+    }
+    pub fn popup_info(&self) -> String {
+        todo!();
     }
     pub fn route(&self, target: &String) -> Result<String, &'static str> {
         if target.starts_with("app/views/") {

@@ -1,19 +1,35 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use ratatui::text::{Span, Spans};
+use ratatui::{
+    text::{Span, Spans},
+    widgets::{ListState, ListItem},
+};
+
 
 use crate::routes::route_node::{RouteNode, RouteNodeNewErrorType, RouteNodeNewError};
 
 pub struct Routes {
     // path: String,
     domain: String,
-    route_nodes: Vec<RouteNode>,
+    pub route_nodes: Vec<RouteNode>,
     errors: Vec<RouteNodeNewError>,
     pub length: usize,
 }
 
-mod route_node;
+pub mod route_node;
+
+impl From<&RouteNode> for ListItem<'_> {
+    fn from(route_node: &RouteNode) -> Self {
+        ListItem::new(Spans::from(
+            vec![
+                Span::from(format!("{:100}{}", route_node.uri_pattern, route_node.controller_action)),
+            ]
+        ))
+    }
+}
+
+
 
 impl Routes {
     fn parse_file(domain: &str, s: String) -> (Vec<RouteNode>, Vec<RouteNodeNewError>) {
@@ -78,24 +94,14 @@ impl Routes {
             }).collect::<Vec<Spans>>()
     }
 
-    pub fn get_node_route(&self, i: usize, filter_string: &String) -> String {
-        // self.route_nodes.get(0).unwrap().into()
-        // self.route_nodes.get(0).unwrap().into::<String>()
-
-        /*
-            // .filter(|route_node| route_node.uri_pattern.contains(filter_string)).collect::<Vec<Spans>>()
-        let tmp = self.route_nodes.iter()
-            .filter(|route_node| route_node.uri_pattern.contains(filter_string));
-        let t = tmp;
-        */
-
-        match self.route_nodes.iter()
+    pub fn get_route_node(&self, i: usize, filter_string: &String) -> Option<&RouteNode> {
+        self.route_nodes.iter()
             .filter(|route_node| route_node.uri_pattern.contains(filter_string))
             // .nth(i).unwrap("");
-            .nth(i) {
+            .nth(i) /*{
                 Some(route_node) => format!("{}", route_node),
                 None => String::new()
-            }
+            }*/
         
     }
 
