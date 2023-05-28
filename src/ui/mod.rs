@@ -63,9 +63,15 @@ fn get_layout_chunks(size: Rect) -> Vec<Rect> {
         .split(size).to_vec()
 }
 
-fn draw_status_bar<'layout>() -> Paragraph<'layout> {
-    let (title, color) = ("NORMAL MODE +++FILTER MODE CONTAIN+++", Color::LightCyan);
-
+fn draw_status_bar<'layout>(edit_mode: bool) -> Paragraph<'layout> {
+    let (title, color) = match edit_mode {
+        true => {
+            ("-Insert mode- +++FILTER MODE CONTAIN+++", Color::Red)
+        }
+        false => {
+            ("NORMAL MODE +++FILTER MODE CONTAIN+++", Color::LightCyan)
+        },
+    };
     Paragraph::new(title)
         .style(Style::default().fg(color))
         .alignment(Alignment::Center)
@@ -107,6 +113,7 @@ pub struct App {
     // terminal: Terminal<B>,
     node_list_state: ListState,
     routes_component: RoutesComponent,
+    edit_mode: bool,
     // graph_component: GraphComponent<'a>,
 }
 
@@ -120,6 +127,7 @@ impl App {
             node_list_state,
             // graph_component,
             routes_component,
+            edit_mode: false,
         }
     }
 
@@ -137,7 +145,7 @@ impl App {
             terminal.draw(|f| {
                 let mut chunks = get_layout_chunks(f.size());
 
-                let status_bar = draw_status_bar();
+                let status_bar = draw_status_bar(self.edit_mode);
 
                 let tabs = draw_menu_tabs(&menu_titles, active_menu_item);
 
@@ -158,17 +166,33 @@ impl App {
             })?;
 
             if let Event::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Char('q') => {
-                        break;
+                match self.edit_mode {
+                    true => {
+                        match key.code {
+                            KeyCode::Esc|KeyCode::F(2) => { self.edit_mode = false } // Gets traped in vim
+                            key_code => {
+                                match tab_index {
+                                    0 => {self.routes_component.event(key_code);}
+                                    _ => {}
+                                }
+                            }
+                        }
                     }
-                    KeyCode::Char('1') => { tab_index = 0 }
-                    KeyCode::Char('2') => { tab_index = 1 }
-                    key_code => {
-                        match tab_index {
-                            // 0 => {self.graph_component.event(key_code);},
-                            0 => {self.routes_component.event(key_code);},
-                            _ => {}
+                    false => {
+                        match key.code {
+                            KeyCode::Char('q') => {
+                                break;
+                            }
+                            KeyCode::Char('i') => self.edit_mode = true,
+                            KeyCode::Char('1') => { tab_index = 0 }
+                            KeyCode::Char('2') => { tab_index = 1 }
+                            key_code => {
+                                match tab_index {
+                                    // 0 => {self.graph_component.event(key_code);},
+                                    0 => {self.routes_component.command_mode_event(key_code);},
+                                    _ => {}
+                                }
+                            }
                         }
                     }
                 }

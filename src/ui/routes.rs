@@ -198,7 +198,34 @@ impl RoutesComponent {
 }
 
 impl Component for RoutesComponent {
-    fn command_mode_event(&mut self, ev: KeyCode) -> Result<String, String> {
+    fn command_mode_event(&mut self, key_code: KeyCode) -> Result<String, String> {
+        match key_code {
+            KeyCode::Up => {
+                // self.index_route = self.index_route.saturating_sub(1)
+                if let Some(selected) = self.route_index_state.selected() {
+                    if selected == 0 {
+                        let selected = self.filtered_size.saturating_sub(1);
+                        self.route_index_state.select(Some(selected));
+                    } else {
+                        self.route_index_state.select(Some(selected.saturating_sub(1)));
+                    }
+                }
+            }
+            KeyCode::Down => {
+                if let Some(selected) = self.route_index_state.selected() {
+                    if selected >= (self.filtered_size.saturating_sub(1)) {
+                        self.route_index_state.select(Some(0));
+                    } else {
+                        self.route_index_state.select(Some(selected + 1));
+                    }
+                }
+
+                // self.index_route = self.index_route.saturating_add(1)
+            }
+            KeyCode::Right => { self.show_popup = true }
+            KeyCode::Left => { self.show_popup = false }
+            _ => {}
+        }
         Ok(String::from("ok"))
     }
 	fn event(&mut self, key_code: KeyCode) -> Result<String, String> {
@@ -225,8 +252,6 @@ impl Component for RoutesComponent {
 
                 // self.index_route = self.index_route.saturating_add(1)
             }
-            KeyCode::Right => { self.show_popup = true }
-            KeyCode::Left => { self.show_popup = false }
             KeyCode::Tab => {
                 // TODO: Reset selected to zero to prevent bug when attempting to look at a
                 // commit that there is not anymore
