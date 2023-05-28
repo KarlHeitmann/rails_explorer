@@ -13,8 +13,10 @@ use ratatui::{
 };
 
 use crate::ui::routes::RoutesComponent;
+use crate::ui::associations::AssociationsComponent;
 
 mod routes;
+mod associations;
 
 pub trait Component {
 	fn command_mode_event(&mut self, ev: KeyCode) -> Result<String, String>;
@@ -113,6 +115,7 @@ pub struct App {
     // terminal: Terminal<B>,
     node_list_state: ListState,
     routes_component: RoutesComponent,
+    associations_component: AssociationsComponent,
     edit_mode: bool,
     // graph_component: GraphComponent<'a>,
 }
@@ -122,10 +125,12 @@ impl App {
         let mut node_list_state = ListState::default();
         node_list_state.select(Some(0));
         let routes_component = RoutesComponent::new("routes.txt");
+        let associations_component = AssociationsComponent::new();
         // let graph_component = GraphComponent::new();
         Self { 
             node_list_state,
             // graph_component,
+            associations_component,
             routes_component,
             edit_mode: false,
         }
@@ -139,7 +144,7 @@ impl App {
 
         let mut tab_index = 0;
 
-        let menu_titles = vec!["Routes", "Quit"];
+        let menu_titles = vec!["Routes", "Associations", "Quit"];
         let active_menu_item = MenuItem::Home;
         loop {
             terminal.draw(|f| {
@@ -157,6 +162,7 @@ impl App {
                     // 0 => self.graph_component.render(f, &mut chunks),
                     // 1 => render_branches(f, &mut chunks),
                     0 => self.routes_component.render(f, chunks[1]),
+                    1 => self.associations_component.render(f, chunks[1]),
                     _ => {},
                 }
                 // wrapper(f, percentage_left, percentage_right, node_list_state, &mut chunks, &git_explorer, repo);

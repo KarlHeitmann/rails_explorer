@@ -52,9 +52,6 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 impl RoutesComponent {
-    // pub const fn new() -> Self {
-    // pub fn new(routes_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-    //     let routes = Routes::new("http://localhost:3000", "routes.txt")?;
     pub fn new(routes_path: &str) -> Self {
         let routes = Routes::new("http://localhost:3000", "routes.txt");
         let mut route_index_state = ListState::default();
