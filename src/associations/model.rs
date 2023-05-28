@@ -1,11 +1,29 @@
 use std::path::PathBuf;
 use std::io::prelude::*;
 
+use ratatui::{
+    text::{Span, Spans},
+    widgets::{
+        ListItem,
+    },
+};
+
 #[derive(Debug)]
 pub struct Model {
     path_buf: PathBuf,
     name: String,
 }
+
+impl From<&Model> for ListItem<'_> {
+    fn from(model: &Model) -> Self {
+        ListItem::new(Spans::from(
+            vec![
+                Span::from(format!("{}", model.name)),
+            ]
+        ))
+    }
+}
+
 
 impl Model {
     pub fn new(path_buf: PathBuf) -> Self {
