@@ -27,6 +27,14 @@ impl Associations {
         }
     }
 
+    pub fn get_model_name(&self, i: usize) -> String {
+
+        match self.models.get(i) {
+            Some(model) => model.name.clone(),
+            None => String::new(),
+        }
+    }
+
     pub fn get_models_iter(&self) -> std::slice::Iter<'_, Model> {
         self.models.iter()
     }

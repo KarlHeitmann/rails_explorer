@@ -11,7 +11,7 @@ use ratatui::{
 #[derive(Debug)]
 pub struct Model {
     path_buf: PathBuf,
-    name: String,
+    pub name: String,
 }
 
 impl From<&Model> for ListItem<'_> {

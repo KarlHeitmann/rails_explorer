@@ -115,6 +115,14 @@ impl Component for AssociationsComponent {
 
                 // self.index_route = self.index_route.saturating_add(1)
             }
+            KeyCode::Enter => {
+                if let Some(selected) = self.association_index_state.selected() {
+                    let model_name: String = self.associations.get_model_name(selected);
+                    // let models: Vec<Model> = self.associations.get_models_iter().collect();
+
+                    return Ok(model_name)
+                }
+            }
             _ => {}
         }
         Ok(String::from("ok"))
