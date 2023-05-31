@@ -26,7 +26,7 @@ use crate::ui::App;
 
 mod ui;
 mod routes;
-mod associations;
+mod model_names;
 
 /// Resets the terminal.
 fn reset_terminal() -> std::result::Result<(), Box<dyn std::error::Error>> {

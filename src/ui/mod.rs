@@ -13,12 +13,12 @@ use ratatui::{
 };
 
 use crate::ui::routes::RoutesComponent;
-use crate::ui::associations::AssociationsComponent;
-use crate::ui::association::AssociationComponent;
+use crate::ui::model_names::ModelNamesComponent;
+use crate::ui::model_node::ModelNodeComponent;
 
 mod routes;
-mod associations;
-mod association;
+mod model_names;
+mod model_node;
 
 pub trait Component {
 	fn command_mode_event(&mut self, ev: KeyCode) -> Result<String, String>;
@@ -145,8 +145,8 @@ pub struct App {
     // terminal: Terminal<B>,
     node_list_state: ListState,
     routes_component: RoutesComponent,
-    associations_component: AssociationsComponent,
-    association_component: Option<AssociationComponent>,
+    model_names_component: ModelNamesComponent,
+    model_node_component: Option<ModelNodeComponent>,
     edit_mode: bool,
     selected_model: Option<String>,
     // graph_component: GraphComponent<'a>,
@@ -158,14 +158,14 @@ impl App {
         node_list_state.select(Some(0));
         let routes_component = RoutesComponent::new("routes.txt");
         let application_path = std::env::var("APPLICATION_ROOT_PATH").unwrap_or(String::from("./"));
-        let associations_component = AssociationsComponent::new(application_path);
-        let association_component = None;
+        let model_names_component = ModelNamesComponent::new(application_path);
+        let model_node_component = None;
         // let graph_component = GraphComponent::new();
         Self { 
             node_list_state,
             // graph_component,
-            associations_component,
-            association_component,
+            model_names_component,
+            model_node_component,
             routes_component,
             edit_mode: false,
             selected_model: None,
@@ -180,7 +180,7 @@ impl App {
 
         let mut tab_index = 0;
 
-        let menu_titles = vec!["Routes", "Associations", "Quit"];
+        let menu_titles = vec!["Routes", "Model names", "Quit"];
         let active_menu_item = MenuItem::Home;
         loop {
             terminal.draw(|f| {
@@ -198,13 +198,13 @@ impl App {
                     // 0 => self.graph_component.render(f, &mut chunks),
                     // 1 => render_branches(f, &mut chunks),
                     0 => self.routes_component.render(f, chunks[1]),
-                    1 => self.associations_component.render(f, chunks[1]),
+                    1 => self.model_names_component.render(f, chunks[1]),
                     2 => {
-                        match &mut self.association_component {
-                            Some(association_component) => association_component.render(f, chunks[1]),
+                        match &mut self.model_node_component {
+                            Some(model_node_component) => model_node_component.render(f, chunks[1]),
                             _ => {}
                         }
-                        // self.association_component.unwrap().render(f, chunks[1]);
+                        // self.model_node_component.unwrap().render(f, chunks[1]);
                     }
                     _ => {},
                 }
@@ -222,7 +222,7 @@ impl App {
                             key_code => {
                                 match tab_index {
                                     0 => {self.routes_component.event(key_code);}
-                                    1 => {self.associations_component.event(key_code);}
+                                    1 => {self.model_names_component.event(key_code);}
                                     _ => {}
                                 }
                             }
@@ -241,11 +241,11 @@ impl App {
                                     // 0 => {self.graph_component.event(key_code);},
                                     0 => {self.routes_component.command_mode_event(key_code);},
                                     1 => {
-                                        let response: String = self.associations_component.command_mode_event(key_code).unwrap();
+                                        let response: String = self.model_names_component.command_mode_event(key_code).unwrap();
                                         if response != String::from("ok") {
                                             self.selected_model = Some(response.clone());
-                                            // self.association_component = Some(AssociationComponent::new(self.selected_model.clone()));
-                                            self.association_component = Some(AssociationComponent::new(response));
+                                            // self.model_nodes_component = Some(AssociationComponent::new(self.selected_model.clone()));
+                                            self.model_node_component = Some(ModelNodeComponent::new(response));
                                             tab_index = 2
                                         }
                                     }

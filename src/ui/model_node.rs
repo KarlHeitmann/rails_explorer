@@ -12,12 +12,12 @@ use ratatui::{
 use crossterm::event::KeyCode;
 
 
-pub struct AssociationComponent {
+pub struct ModelNodeComponent {
     model_name: String,
     show_popup: bool,
 }
 
-impl AssociationComponent {
+impl ModelNodeComponent {
     pub fn new(model_name: String) -> Self {
         Self {
             show_popup: false,
@@ -31,7 +31,7 @@ impl AssociationComponent {
         ) {
         let title_spans = Spans::from(
             vec![
-                Span::from(format!("Associations 0/0 | ")),
+                Span::from(format!("Model Nodes 0/0 | ")),
                 Span::styled(format!("Filter: ''"), Style::default().fg(Color::Green)),
             ]
         );

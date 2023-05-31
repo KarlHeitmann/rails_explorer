@@ -1,17 +1,16 @@
 use glob::glob;
 
-use crate::associations::model::Model;
+use crate::model_names::model::Model;
 
 pub mod model;
 
-pub struct Associations {
+pub struct ModelNames {
     application_root_path: String,
     models: Vec<Model>,
 }
 
-impl Associations {
+impl ModelNames {
     pub fn new(application_root_path: String) -> Self {
-        
         let model_files = glob(&format!("{}/app/models/*.rb", application_root_path));
         let mut models: Vec<Model> = vec![];
         for e in model_files.expect("Failed to read glob pattern") { // FIXME: upon error, load a special component instead of this one
