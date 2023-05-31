@@ -13,8 +13,12 @@ use ratatui::{
 };
 
 use crate::ui::routes::RoutesComponent;
+use crate::ui::model_names::ModelNamesComponent;
+use crate::ui::model_node::ModelNodeComponent;
 
 mod routes;
+mod model_names;
+mod model_node;
 
 pub trait Component {
 	fn command_mode_event(&mut self, ev: KeyCode) -> Result<String, String>;
@@ -46,6 +50,34 @@ impl From<MenuItem> for usize {
         }
     }
 }
+
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
+}
+
 
 fn get_layout_chunks(size: Rect) -> Vec<Rect> {
 // fn get_layout_chunks(size: Rect) -> Rc<Rect> {
@@ -113,7 +145,10 @@ pub struct App {
     // terminal: Terminal<B>,
     node_list_state: ListState,
     routes_component: RoutesComponent,
+    model_names_component: ModelNamesComponent,
+    model_node_component: Option<ModelNodeComponent>,
     edit_mode: bool,
+    selected_model: Option<String>,
     // graph_component: GraphComponent<'a>,
 }
 
@@ -122,12 +157,18 @@ impl App {
         let mut node_list_state = ListState::default();
         node_list_state.select(Some(0));
         let routes_component = RoutesComponent::new("routes.txt");
+        let application_path = std::env::var("APPLICATION_ROOT_PATH").unwrap_or(String::from("./"));
+        let model_names_component = ModelNamesComponent::new(application_path);
+        let model_node_component = None;
         // let graph_component = GraphComponent::new();
         Self { 
             node_list_state,
             // graph_component,
+            model_names_component,
+            model_node_component,
             routes_component,
             edit_mode: false,
+            selected_model: None,
         }
     }
 
@@ -139,7 +180,7 @@ impl App {
 
         let mut tab_index = 0;
 
-        let menu_titles = vec!["Routes", "Quit"];
+        let menu_titles = vec!["Routes", "Model names", "Quit"];
         let active_menu_item = MenuItem::Home;
         loop {
             terminal.draw(|f| {
@@ -157,6 +198,14 @@ impl App {
                     // 0 => self.graph_component.render(f, &mut chunks),
                     // 1 => render_branches(f, &mut chunks),
                     0 => self.routes_component.render(f, chunks[1]),
+                    1 => self.model_names_component.render(f, chunks[1]),
+                    2 => {
+                        match &mut self.model_node_component {
+                            Some(model_node_component) => model_node_component.render(f, chunks[1]),
+                            _ => {}
+                        }
+                        // self.model_node_component.unwrap().render(f, chunks[1]);
+                    }
                     _ => {},
                 }
                 // wrapper(f, percentage_left, percentage_right, node_list_state, &mut chunks, &git_explorer, repo);
@@ -173,6 +222,7 @@ impl App {
                             key_code => {
                                 match tab_index {
                                     0 => {self.routes_component.event(key_code);}
+                                    1 => {self.model_names_component.event(key_code);}
                                     _ => {}
                                 }
                             }
@@ -190,6 +240,15 @@ impl App {
                                 match tab_index {
                                     // 0 => {self.graph_component.event(key_code);},
                                     0 => {self.routes_component.command_mode_event(key_code);},
+                                    1 => {
+                                        let response: String = self.model_names_component.command_mode_event(key_code).unwrap();
+                                        if response != String::from("ok") {
+                                            self.selected_model = Some(response.clone());
+                                            // self.model_nodes_component = Some(AssociationComponent::new(self.selected_model.clone()));
+                                            self.model_node_component = Some(ModelNodeComponent::new(response));
+                                            tab_index = 2
+                                        }
+                                    }
                                     _ => {}
                                 }
                             }

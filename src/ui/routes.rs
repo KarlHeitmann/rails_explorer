@@ -9,7 +9,7 @@ use ratatui::{
     backend::Backend,
 };
 
-use crate::ui::Component;
+use crate::ui::{centered_rect, Component};
 use crate::routes::route_node::RouteNode;
 use crate::routes::Routes;
 // use crossterm::event::Event;
@@ -24,37 +24,7 @@ pub struct RoutesComponent {
     show_popup: bool,
 }
 
-/// helper function to create a centered rect using up certain percentage of the available rect `r`
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage((100 - percent_y) / 2),
-                Constraint::Percentage(percent_y),
-                Constraint::Percentage((100 - percent_y) / 2),
-            ]
-            .as_ref(),
-        )
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage((100 - percent_x) / 2),
-                Constraint::Percentage(percent_x),
-                Constraint::Percentage((100 - percent_x) / 2),
-            ]
-            .as_ref(),
-        )
-        .split(popup_layout[1])[1]
-}
-
 impl RoutesComponent {
-    // pub const fn new() -> Self {
-    // pub fn new(routes_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-    //     let routes = Routes::new("http://localhost:3000", "routes.txt")?;
     pub fn new(routes_path: &str) -> Self {
         let routes = Routes::new("http://localhost:3000", "routes.txt");
         let mut route_index_state = ListState::default();
